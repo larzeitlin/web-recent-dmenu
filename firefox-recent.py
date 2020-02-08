@@ -3,6 +3,7 @@
 import sqlite3
 import os
 import shutil
+import re
 
 def copy_db(location):
     destination = os.path.expanduser("~") + "/.firefox_places_copy.sqlite"
@@ -11,8 +12,18 @@ def copy_db(location):
     shutil.copy2(location, destination)
     return(destination)
 
+def get_profile_name():
+    profiles_path = os.path.expanduser('~')+"/.mozilla/firefox/profiles.ini"
+    with open(profiles_path) as p:
+        lines = p.readlines()
+        profile_matches = [re.search(r"^Path=(.*\.default)$", l).group(1)
+                           for l in lines if l.startswith( 'Path' )]
+        profile = profile_matches.pop()
+        return(profile)
+        
 def main():
-    places_path = os.path.expanduser('~')+"/.mozilla/firefox/7r5u8o5y.default/places.sqlite"
+    profile_name = get_profile_name()
+    places_path = os.path.expanduser('~')+"/.mozilla/firefox/{}/places.sqlite".format(profile_name)
     db = copy_db(places_path)
     c = sqlite3.connect(db)
     cursor = c.cursor()
